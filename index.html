@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>API MASH-UP</title>
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="/maps/documentation/javascript/demos/demos.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+  <link rel="stylesheet" type="text/css" href="style.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+   <script src="https://code.jquery.com/jquery-2.1.3.min.js"></script>
+   <script src="https://apis.google.com/js/client.js?onload=init"></script>
+   <script src="https://apis.google.com/js/api.js"></script>
+   <script type="text/javascript" src="main.js"></script>
+</head>
+<body>
+<nav class="navbar navbar-inverse">
+  <div class="container-fluid">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#myNavbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>                        
+      </button>
+    </div>
+    <div class="collapse navbar-collapse" id="myNavbar">
+      <ul class="nav navbar-nav">
+          <li class="bc">
+            <div class="search-container">
+                <form action="/action_page.php">
+                  <input type="text" placeholder="Search.." name="search" id="search" class="search">
+                  
+                </form>
+              </div>
+            </li>
+            <li class="bc">                  
+              <div class="search-container">
+                  <input type="number"  name="cantidad" id="cant" class="cant">
+                 <button  onclick="loadClient2().then(buscar)" class="btn btn-primary active">Buscar</button>
+                 <button  onclick="ubicacion1()" class="btn btn-primary active">Ubicacion</button>
+              </div>
+            </li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li><button onclick="authenticate().then(loadClient)" class="btn btn-primary active">SIGN-IN</button></li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+
+<div id="task">
+  <button  onclick="loadClient4().then(agregarTarea).then(listTask)" class="btn btn-primary active">Ver Historial</button>
+  <pre id="content" class="content"><p id="listaTareas"></p></pre>
+
+</div>
+
+<h3>Google Maps</h3>
+    <div id="id02"></div>
+    <p id="mensaje"></p>
+    <div id="map"></div>
+    <script>
+      var markers = [];
+  function initMap( lati, longi,frame ) {
+    var latLong = new google.maps.LatLng(lati, longi,frame);
+        var map = new google.maps.Map(document.getElementById("map"), {
+          zoom: 5.5,
+          center: {lat: 21.14, lng: -100.96}
+        });
+        var marker = new google.maps.Marker({
+          position: latLong,
+          map: map
+        });
+    var infoWindow = new google.maps.InfoWindow({
+    content:frame
+  });
+  
+  marker.addListener('mouseover',function(){
+    infoWindow.open(map,marker);
+  })
+        
+       markers.push(marker);
+       setMapOnAll(map);
+      }
+
+
+      function initMap() {
+        var uluru = {lat: -25.363, lng: 131.044};
+        var map = new google.maps.Map(document.getElementById('map'), {
+          zoom: 4,
+          center: uluru
+        });
+        var marker = new google.maps.Marker({
+          position: uluru,
+          map: map
+        });
+      }
+    </script>
+    <script async defer
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyD-CuB735pK99O3hZmt8lbiFJ3GNncxMjI&callback=initMap">
+    </script>
+
+<div class="listaVideos">
+  <pre class="content"></pre>
+</div>
+
+<script src="https://apis.google.com/js/api.js"></script>
+<script>
+  function loadClient2() {
+    return gapi.client.load("https://content.googleapis.com/discovery/v1/apis/youtube/v3/rest")
+        .then(function() { console.log("GAPI client loaded for API"); },
+              function(err) { console.error("Error loading GAPI client for API", err); });
+  }
+
+//busca en youtube 
+var url;
+var idV;
+  function buscar() {
+     var q = $('#search').val(); //obtiene el valor en input de lo que desea buscar
+    var mr = $('#cant').val(); //obtiene la cantidad de videos a buscar
+    return gapi.client.youtube.search.list({
+      "part": "snippet",
+      q: q,
+      maxResults: mr
+    })
+        .then(function(response) {
+                console.log("Response", response);
+                 var results = response.result;
+                 
+          $("#results").html("");
+          $.each(results.items, function(index, item) { 
+            idV = item.id.videoId;
+          url = "https://www.youtube.com/embed/"+item.id.videoId;          
+                $("#results").append("<p> Titulo: " + item.snippet.title + "</p>");
+                $("#results").append("<iframe src="+ url + "></iframe");
+          });
+
+              },
+              function(err) { console.error("Execute error", err); });
+  }
+
+  gapi.load("client");
+
+
+  function loadClient3() {
+    gapi.client.setApiKey('AIzaSyD-CuB735pK99O3hZmt8lbiFJ3GNncxMjI');
+    return gapi.client.load("https://content.googleapis.com/discovery/v1/apis/youtube/v3/rest")
+        .then(function() { console.log("GAPI client loaded for API"); },
+              function(err) { console.error("Error loading GAPI client for API", err); });
+  }
+  // Make sure the client is loaded before calling this method.
+
+var ar_video;
+var numV;
+ function ubicacion1(){
+  numV=document.getElementById("cant").value;
+ar_video= new Array(numV)
+clearMarkers();
+var xmlhttp = new XMLHttpRequest();
+var url2 = "https://www.googleapis.com/youtube/v3/videos?part=recordingDetails%2Cplayer&id="+ar_video+"&key=AIzaSyByOiuXHJYNRx1ajzihEvsa0PB6jCV2eGA";
+
+xmlhttp.onreadystatechange = function() {
+    if (this.readyState == 4 && this.status == 200) {
+        var myArr = JSON.parse(this.responseText);
+    ubi(myArr);
+    }
+};
+
+xmlhttp.open("GET", url2, true);
+xmlhttp.send();
+}
+
+function ubi(arr) {
+deleteMarkers();
+clearMarkers();
+    var out = "";
+    var i;
+   
+  for(i = 0; i < arr.items.length; i++) {
+  if(typeof arr.items[i].recordingDetails=='undefined'){      
+      document.getElementById("mensaje").textContent = "No hay resultados";          
+}else{
+document.getElementById("mensaje").textContent = "Resultados";
+  out+= arr.items[i].player.embedHtml+'<p>'+arr.items[i].recordingDetails.location.latitude+'</p><br><p>'+arr.items[i].recordingDetails.location.longitude+'</p>';
+   initMap( arr.items[i].recordingDetails.location.latitude, arr.items[i].recordingDetails.location.longitude,arr.items[i].player.embedHtml);
+   
+  }
+  
+  }
+    document.getElementById("id02").innerHTML = out;   
+}
+function setMapOnAll(map) {
+
+        for (var i = 0; i < markers.length; i++) {
+          markers[i].setMap(map);
+        }
+}
+
+
+ function deleteMarkers() {
+        clearMarkers();
+        markers = [];
+      }
+    
+    function clearMarkers() {
+        setMapOnAll(null);
+      }
+
+
+
+  gapi.load("client");
+</script>
+
+<p id="results"></p>
+<p id="results2"></p>
+
+
+</body>
+</html>
